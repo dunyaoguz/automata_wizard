@@ -1,0 +1,13 @@
+digraph {
+	fake [style=invisible]
+	q2 [shape=doublecircle]
+	q1 [root=true]
+	q0
+	fake -> q1 [style=bold]
+	q0 -> q0 [label=s0]
+	q0 -> q1 [label=s1]
+	q1 -> q1 [label=s0]
+	q1 -> q2 [label=s1]
+	q2 -> q2 [label=s0]
+	q2 -> q0 [label=s1]
+}

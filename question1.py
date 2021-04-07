@@ -11,24 +11,28 @@ def get_user_input():
     # converts a given user input into a set
     def converter(x): return set([s.strip() for s in x.split(',')])
 
-    type = input('Do you want to create a diagram for a dfa or an nfa?')
+    type = input('Do you want to create a diagram for a dfa or an nfa? ')
     states = converter(input('Enter the states of your automaton: '))
 
-    initial = input('Specify the initial state: ')
-    while initial not in states:
-        print('\nERR.. State not found. ¯\\_(ツ)_/¯\n')
-        initial = input('Specify the initial state: ')
+    initial = converter(input('Specify the initial state(s): '))
+    while len([i for i in initial if i not in states]) > 0:
+        print('\nState not found. Try again. ¯\\_(ツ)_/¯\n')
+        initial = converter(input('Specify the initial state(s): '))
+
+    if type == 'dfa' and len(initial) != 1:
+        print('\nERROR: Only one initial state can be entered for a dfa. >_>')
+        print('Exiting. ╚(ಠ_ಠ)=┐\n')
+        raise SystemExit
 
     final = converter(input('Specify the final state(s): '))
-    for f in final:
-        if f not in states:
-            print('\nERR.. State not found, ¯\\_(ツ)_/¯\n')
-            final = converter(input('Specify the final state(s): '))
+    while len([f for f in final if f not in states]) > 0:
+        print('\nState not found. Try again. ¯\\_(ツ)_/¯\n')
+        final = converter(input('Specify the final state(s): '))
 
     alphabet = converter(input('Enter the alphabet of your automaton: '))
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
 
-    with open('t.csv', 'w') as file:
+    with open('table.csv', 'w') as file:
         file.writelines('𝛿,' + ','.join(alphabet) + '\n')
         for s in states:
             file.writelines(s + '\n')
@@ -37,14 +41,16 @@ def get_user_input():
     print('For nfas, separate multiple states with the `|` character.')
     is_complete = False
     while not is_complete:
-        is_complete = input('When you\'re done, hit any key to continue: ')
+        is_complete = input('When you\'re done, hit any key + enter to continue: ')
+    print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
 
     return type, states, initial, alphabet, final
 
 
-def read_transitions(type):
+def read_transitions(type, states):
     """ Reads the transition table filled by the user """
 
+    print('Reading transitions...')
     with open('table.csv', 'r') as file:
         lines = file.readlines()
 
@@ -57,7 +63,14 @@ def read_transitions(type):
         for row in rows[1:]:
             for i, cell in enumerate(row[1:]):
                 if cell != '':
-                    transitions[(row[0], rows[0][i+1])] = cell
+                    try:
+                        transitions[(row[0], rows[0][i+1])] = cell
+                        if cell not in states:
+                            print(f'Detected unknown state {cell}. ಠ_ಠ')
+                    except IndexError:
+                        print('\nERROR: You gave multiple states for a dfa. (¬_¬)')
+                        print('Exiting. ╚(ಠ_ಠ)=┐\n')
+                        raise SystemExit
     else:
         for row in rows[1:]:
             for i, cell in enumerate(row[1:]):
@@ -65,6 +78,9 @@ def read_transitions(type):
                 for c in cell.split('|'):
                     if c != '':
                         transitions.setdefault(key, set()).add(c)
+                        if c not in states:
+                            print(f'Detected unknown state {c}. ಠ_ಠ')
+    print('Done!')
     return transitions
 
 
@@ -77,17 +93,18 @@ def create_graph(type, states, initial, alphabet, final, transitions):
                 'transitions': transitions}
 
     if type == 'dfa':
-        automata['initial_state'] = initial
+        automata['initial_state'] = ''.join(initial)
         automata_IO.dfa_to_dot(automata, 'graph.png')
     else:
         automata['initial_states'] = initial
         automata_IO.nfa_to_dot(automata, 'graph.png')
 
-    print('Your transition diagram is created. View the file called graph.png')
+    print('\nYour transition diagram is created! ~(˘▾˘~)')
+    print('Check it out in the file called graph.png.\n')
 
 
 if __name__ == '__main__':
 
     type, states, initial, alphabet, final = get_user_input()
-    transitions = read_transitions(type)
-    create_graph()
+    transitions = read_transitions(type, states)
+    create_graph(type, states, initial, alphabet, final, transitions)
