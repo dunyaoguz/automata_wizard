@@ -1,68 +1,93 @@
 from PySimpleAutomata import automata_IO
-import pandas as pd
-
-dfa = {
-  "alphabet": {"5c", "10c", "gum"},
-  "states": {"s0", "s1", "s2", "s3", "s4"},
-  "initial_state": "s0",
-  "accepting_states": {"s0", "s2"},
-  "transitions": {
-    ("s0", "5c"): "s1",
-    ("s0", "10c"): "s4",
-    ("s1", "5c"): "s2",
-    ("s1", "10c"): "s3",
-    ("s2", "5c"): "s3",
-    ("s2", "10c"): "s3",
-    ("s4", "5c"): "s3",
-    ("s4", "10c"): "s3",
-    ("s3", "gum"): "s0"
-  }
-}
 
 
 def get_user_input():
-    '''Welcome the user to the program and prompt for necessary inputs'''
+    """ Welcomes user to the program and obtain the necessary inputs """
 
-    print('\nWelcome, human (￣(oo)￣)ﾉ')
-    print('Answer these questions to create a pretty transition diagram')
+    print('\nWelcome, human. (￣(oo)￣)ﾉ')
+    print('Answer these questions to create a pretty transition diagram.')
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
 
-    # generalized function that converts user input into set
+    # converts a given user input into a set
     def converter(x): return set([s.strip() for s in x.split(',')])
 
+    type = input('Do you want to create a diagram for a dfa or an nfa?')
     states = converter(input('Enter the states of your automaton: '))
 
     initial = input('Specify the initial state: ')
     while initial not in states:
-        print('\nERR.. State not found ¯\\_(ツ)_/¯\n')
+        print('\nERR.. State not found. ¯\\_(ツ)_/¯\n')
         initial = input('Specify the initial state: ')
 
     final = converter(input('Specify the final state(s): '))
     for f in final:
         if f not in states:
-            print('\nERR.. State not found ¯\\_(ツ)_/¯\n')
+            print('\nERR.. State not found, ¯\\_(ツ)_/¯\n')
             final = converter(input('Specify the final state(s): '))
 
     alphabet = converter(input('Enter the alphabet of your automaton: '))
-
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
-    df = pd.DataFrame(columns=['𝛿'] + list(alphabet))
-    df['𝛿'] = list(states)
-    df.to_csv('t.csv', index=False)
-    print('Now, open t.csv and fill in the transition table')
 
+    with open('t.csv', 'w') as file:
+        file.writelines('𝛿,' + ','.join(alphabet) + '\n')
+        for s in states:
+            file.writelines(s + '\n')
+
+    print('Now, open the file called table.csv and fill in the transition table.')
+    print('For nfas, separate multiple states with the `|` character.')
     is_complete = False
     while not is_complete:
-        is_complete = input('Enter \'Y\' here when you\'re done: ')
+        is_complete = input('When you\'re done, hit any key to continue: ')
 
-    return states, initial, alphabet, final
+    return type, states, initial, alphabet, final
 
 
-def read_transitions():
+def read_transitions(type):
+    """ Reads the transition table filled by the user """
 
+    with open('table.csv', 'r') as file:
+        lines = file.readlines()
+
+    rows = []
+    for line in lines:
+        rows.append(line.strip('\n').split(','))
+
+    transitions = {}
+    if type == 'dfa':
+        for row in rows[1:]:
+            for i, cell in enumerate(row[1:]):
+                if cell != '':
+                    transitions[(row[0], rows[0][i+1])] = cell
+    else:
+        for row in rows[1:]:
+            for i, cell in enumerate(row[1:]):
+                key = (row[0], rows[0][i+1])
+                for c in cell.split('|'):
+                    if c != '':
+                        transitions.setdefault(key, set()).add(c)
     return transitions
 
 
+def create_graph(type, states, initial, alphabet, final, transitions):
+    """ Creates an svg file displaying the transition diagram """
+
+    automata = {'alphabet': alphabet,
+                'states': states,
+                'accepting_states': final,
+                'transitions': transitions}
+
+    if type == 'dfa':
+        automata['initial_state'] = initial
+        automata_IO.dfa_to_dot(automata, 'graph.png')
+    else:
+        automata['initial_states'] = initial
+        automata_IO.nfa_to_dot(automata, 'graph.png')
+
+    print('Your transition diagram is created. View the file called graph.png')
+
+
 if __name__ == '__main__':
-    states, initial, alphabet, final = get_user_input()
-    automata_IO.dfa_to_dot(dfa, 'graph.png')
+
+    type, states, initial, alphabet, final = get_user_input()
+    transitions = read_transitions(type)
+    create_graph()
