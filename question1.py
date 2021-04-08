@@ -16,28 +16,27 @@ def get_user_input():
 
     initial = converter(input('Specify the initial state(s): '))
     while len([i for i in initial if i not in states]) > 0:
-        print('\nState not found. Try again. ¯\\_(ツ)_/¯\n')
+        print('\nERROR: State not found. Try again. ¯\\_(ツ)_/¯\n')
         initial = converter(input('Specify the initial state(s): '))
 
-    if type == 'dfa' and len(initial) != 1:
-        print('\nERROR: Only one initial state can be entered for a dfa. >_>')
-        print('Exiting. ╚(ಠ_ಠ)=┐\n')
-        raise SystemExit
+    while type == 'dfa' and len(initial) != 1:
+        print('\nERROR: Only one initial state can be entered for a dfa. Try again. >_>\n')
+        initial = converter(input('Specify the initial state(s): '))
 
     final = converter(input('Specify the final state(s): '))
     while len([f for f in final if f not in states]) > 0:
-        print('\nState not found. Try again. ¯\\_(ツ)_/¯\n')
+        print('\nERROR: State not found. Try again. ¯\\_(ツ)_/¯\n')
         final = converter(input('Specify the final state(s): '))
 
     alphabet = converter(input('Enter the alphabet of your automaton: '))
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
 
-    with open('table.csv', 'w') as file:
+    with open('table1.csv', 'w') as file:
         file.writelines('𝛿,' + ','.join(alphabet) + '\n')
         for s in states:
             file.writelines(s + '\n')
 
-    print('Now, open the file called table.csv and fill in the transition table.')
+    print('Now, open the file called table1.csv and fill in the transition table.')
     print('For nfas, separate multiple states with the `|` character.')
     is_complete = False
     while not is_complete:
@@ -51,7 +50,7 @@ def read_transitions(type, states):
     """ Reads the transition table filled by the user """
 
     print('Reading transitions...')
-    with open('table.csv', 'r') as file:
+    with open('table1.csv', 'r') as file:
         lines = file.readlines()
 
     rows = []
@@ -68,7 +67,7 @@ def read_transitions(type, states):
                         if cell not in states:
                             print(f'Detected unknown state {cell}. ಠ_ಠ')
                     except IndexError:
-                        print('\nERROR: You gave multiple states for a dfa. (¬_¬)')
+                        print('\nFATAL ERROR: You gave multiple states for a dfa. (¬_¬)')
                         print('Exiting. ╚(ಠ_ಠ)=┐\n')
                         raise SystemExit
     else:
@@ -104,7 +103,6 @@ def create_graph(type, states, initial, alphabet, final, transitions):
 
 
 if __name__ == '__main__':
-
     type, states, initial, alphabet, final = get_user_input()
     transitions = read_transitions(type, states)
     create_graph(type, states, initial, alphabet, final, transitions)
