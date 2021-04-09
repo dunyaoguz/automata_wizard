@@ -1,4 +1,4 @@
-# automata_creator
+# automata_wizard
 
 ## Directory
 
