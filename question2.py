@@ -26,10 +26,9 @@ def read_nfa():
     states = [row[0] for row in rows[1:]]
     initial = [state.strip('->') for state in states if '->' in state]
     final = [state.strip('*') for state in states if '*' in state]
-    states = [state.strip('->').strip('*') for state in states]
     rows = [[r.strip('->').strip('*') for r in row] for row in rows]
 
-    return rows, alphabet, states, initial, final
+    return rows, alphabet, initial, final
 
 
 def find_new_states(transitions, new_states):
@@ -66,22 +65,35 @@ def convert_nfa(rows):
                     transitions.setdefault(key, set()).add(c)
 
     new_states = [v for v in transitions.values() if len(v) > 1]
-    return find_new_states(transitions, new_states)
+    transitions = find_new_states(transitions, new_states)
+    cleaned_transitions = {(('{\'' + k[0] + '\'}', k[1]) if '{' not in k[0]
+                            else k):str(v) for k, v in transitions.items()}
+
+    return cleaned_transitions
 
 
-def create_output(alphabet, states, initial, final, transitions):
+def create_output(alphabet, initial, final, transitions):
     """ Creates a transition table and diagram for the new dfa """
 
-    # Q: How to determine the initial state of the new dfa?
-    # Q: How to determine the final state of the new dfa?
-    # Q: Is it ok to not include those additional rows in the table?
+    states = set([k[0] for k in transitions.keys()])
+    new_initial = [s for s in states if s if s == '{\'' + initial[0] + '\'}'][0]
+    new_final = []
+    for f in final:
+        new_final.extend([s for s in states if f in s])
 
-    nfa = {'alphabet': alphabet,
+    dfa = {'alphabet': alphabet,
            'states': states,
-           'accepting_states': final,
+           'initial_state': new_initial,
+           'accepting_states': set(new_final),
            'transitions': transitions}
 
+    automata_IO.dfa_to_dot(dfa, 'graph2.png')
+    print('\nYour transition diagram is created! ~(˘▾˘~)')
+    print('Check it out in the file called graph2.png.\n')
 
 if __name__ == '__main__':
-    rows, alphabet, states, initial, final = read_nfa()
+    rows, alphabet, initial, final = read_nfa()
     transitions = convert_nfa(rows)
+
+    # TODO: Transition table
+    # TODO: Need to not see {q1} & {q2} in the graph

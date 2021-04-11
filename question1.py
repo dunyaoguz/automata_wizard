@@ -93,13 +93,13 @@ def create_graph(type, states, initial, alphabet, final, transitions):
 
     if type == 'dfa':
         automata['initial_state'] = ''.join(initial)
-        automata_IO.dfa_to_dot(automata, 'graph.png')
+        automata_IO.dfa_to_dot(automata, 'graph1.png')
     else:
         automata['initial_states'] = initial
-        automata_IO.nfa_to_dot(automata, 'graph.png')
+        automata_IO.nfa_to_dot(automata, 'graph1.png')
 
     print('\nYour transition diagram is created! ~(˘▾˘~)')
-    print('Check it out in the file called graph.png.\n')
+    print('Check it out in the file called graph1.png.\n')
 
 
 if __name__ == '__main__':
