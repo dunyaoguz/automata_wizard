@@ -32,7 +32,7 @@ def read_nfa():
 
 
 def find_new_states(transitions, new_states):
-    """ Recursively finds the new states generated during the nfa-to-dfa conversion"""
+    """ Recursively finds the new states generated during the nfa-to-dfa conversion """
     # base case
     if not new_states:
         return transitions
@@ -56,18 +56,25 @@ def find_new_states(transitions, new_states):
 def convert_nfa(rows):
     """ Converts the nfa in the transition table to a dfa """
 
-    transitions = {}
+    nfa_transitions = {}
     for row in rows[1:]:
         for i, cell in enumerate(row[1:]):
             key = (row[0], rows[0][i+1])
             for c in cell.split('|'):
                 if c != '':
-                    transitions.setdefault(key, set()).add(c)
+                    nfa_transitions.setdefault(key, set()).add(c)
 
-    new_states = [v for v in transitions.values() if len(v) > 1]
-    transitions = find_new_states(transitions, new_states)
-    cleaned_transitions = {(('{\'' + k[0] + '\'}', k[1]) if '{' not in k[0]
-                            else k):str(v) for k, v in transitions.items()}
+    new_states = [v for v in nfa_transitions.values() if len(v) > 1]
+    # find all possible states + transitions that can occur
+    possible_transitions = find_new_states(nfa_transitions, new_states)
+    # convert sets to strings
+    quote_remover = lambda x: x.replace('\'', '')
+    dfa_transitions = {('{' + quote_remover(k[0]) + '}', k[1]) if '{' not in k[0]
+                       else (quote_remover(k[0]), k[1]):quote_remover(str(v))
+                       for k, v in possible_transitions.items()}
+    # remove transitions that are not reachable
+    cleaned_transitions = {k: v for k, v in dfa_transitions.items()
+                           if k[0] in [v for v in dfa_transitions.values()]}
 
     return cleaned_transitions
 
@@ -76,7 +83,7 @@ def create_output(alphabet, initial, final, transitions):
     """ Creates a transition table and diagram for the new dfa """
 
     states = set([k[0] for k in transitions.keys()])
-    new_initial = [s for s in states if s if s == '{\'' + initial[0] + '\'}'][0]
+    new_initial = [s for s in states if s if s == '{' + initial[0] + '}'][0]
     new_final = []
     for f in final:
         new_final.extend([s for s in states if f in s])
@@ -91,9 +98,23 @@ def create_output(alphabet, initial, final, transitions):
     print('\nYour transition diagram is created! ~(˘▾˘~)')
     print('Check it out in the file called graph2.png.\n')
 
+    transitions[('{q1}', '1')]
+
+    with open('table3.csv', 'w') as file:
+        file.writelines('𝛿,' + ','.join(alphabet) + '\n')
+        for s in states:
+            for a in alphabet:
+                try:
+                    file.writelines(s + ',' + str(transitions[(s, a)]))
+                except:
+                    pass
+
+    transitions
+
+
 if __name__ == '__main__':
     rows, alphabet, initial, final = read_nfa()
     transitions = convert_nfa(rows)
+    create_output(alphabet, initial, final, transitions)
 
     # TODO: Transition table
-    # TODO: Need to not see {q1} & {q2} in the graph
