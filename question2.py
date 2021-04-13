@@ -12,7 +12,7 @@ def read_nfa():
     is_complete = False
     while not is_complete:
         is_complete = input('When you\'re done, hit any key + enter to continue: ')
-    print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
+    print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *')
 
     with open('table2.csv', 'r') as file:
         lines = file.readlines()
@@ -54,7 +54,8 @@ def find_new_states(transitions, new_states):
 
 
 def convert_nfa(rows):
-    """ Converts the nfa in the transition table to a dfa """
+    """ Converts the nfa given by the user to a dfa by using the find_new_states
+    function """
 
     nfa_transitions = {}
     for row in rows[1:]:
@@ -68,9 +69,8 @@ def convert_nfa(rows):
     # find all possible states + transitions that can occur
     possible_transitions = find_new_states(nfa_transitions, new_states)
     # convert sets to strings
-    quote_remover = lambda x: x.replace('\'', '')
-    dfa_transitions = {('{' + quote_remover(k[0]) + '}', k[1]) if '{' not in k[0]
-                       else (quote_remover(k[0]), k[1]):quote_remover(str(v))
+    dfa_transitions = {('{' + k[0].replace('\'', '') + '}', k[1]) if '{' not in k[0]
+                       else (k[0].replace('\'', ''), k[1]): str(v).replace('\'', '')
                        for k, v in possible_transitions.items()}
     # remove transitions that are not reachable
     cleaned_transitions = {k: v for k, v in dfa_transitions.items()
@@ -81,7 +81,7 @@ def convert_nfa(rows):
 
 def create_output(alphabet, initial, final, transitions):
     """ Creates a transition table and diagram for the new dfa """
-
+    # Create transition diagram
     states = set([k[0] for k in transitions.keys()])
     new_initial = [s for s in states if s if s == '{' + initial[0] + '}'][0]
     new_final = []
@@ -93,28 +93,27 @@ def create_output(alphabet, initial, final, transitions):
            'initial_state': new_initial,
            'accepting_states': set(new_final),
            'transitions': transitions}
-
     automata_IO.dfa_to_dot(dfa, 'graph2.png')
-    print('\nYour transition diagram is created! ~(˘▾˘~)')
-    print('Check it out in the file called graph2.png.\n')
 
-    transitions[('{q1}', '1')]
-
+    # Create transition table
     with open('table3.csv', 'w') as file:
         file.writelines('𝛿,' + ','.join(alphabet) + '\n')
         for s in states:
-            for a in alphabet:
+            file.writelines(f"{s.replace(', ', '|')}" + ',')
+            for i, a in enumerate(alphabet):
                 try:
-                    file.writelines(s + ',' + str(transitions[(s, a)]))
-                except:
+                    file.writelines(f"{transitions[(s, a)].replace(', ', '|')}")
+                except KeyError:
                     pass
+                if i != len(alphabet)-1:
+                    file.writelines(',')
+            file.writelines('\n')
 
-    transitions
+    print('\nYour transition diagram + table are created! ~(˘▾˘~)')
+    print('Check \'em out in the files called graph2.png & table3.csv.\n')
 
 
 if __name__ == '__main__':
     rows, alphabet, initial, final = read_nfa()
     transitions = convert_nfa(rows)
     create_output(alphabet, initial, final, transitions)
-
-    # TODO: Transition table
