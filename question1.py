@@ -31,7 +31,7 @@ def get_user_input():
     alphabet = converter(input('Enter the alphabet of your automaton: '))
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
 
-    with open('table1.csv', 'w') as file:
+    with open('tables/table1.csv', 'w') as file:
         file.writelines('𝛿,' + ','.join(alphabet) + '\n')
         for s in states:
             file.writelines(s + '\n')
@@ -50,7 +50,7 @@ def read_transitions(type, states):
     """ Reads the transition table filled by the user """
 
     print('Reading transitions...')
-    with open('table1.csv', 'r') as file:
+    with open('tables/table1.csv', 'r') as file:
         lines = file.readlines()
 
     rows = []
@@ -93,10 +93,10 @@ def create_graph(type, states, initial, alphabet, final, transitions):
 
     if type == 'dfa':
         automata['initial_state'] = ''.join(initial)
-        automata_IO.dfa_to_dot(automata, 'graph1.png')
+        automata_IO.dfa_to_dot(automata, 'graphs/graph1.png')
     else:
         automata['initial_states'] = initial
-        automata_IO.nfa_to_dot(automata, 'graph1.png')
+        automata_IO.nfa_to_dot(automata, 'graphs/graph1.png')
 
     print('\nYour transition diagram is created! ~(˘▾˘~)')
     print('Check it out in the file called graph1.png.\n')

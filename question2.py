@@ -14,7 +14,7 @@ def read_nfa():
         is_complete = input('When you\'re done, hit any key + enter to continue: ')
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *')
 
-    with open('table2.csv', 'r') as file:
+    with open('tables/table2.csv', 'r') as file:
         lines = file.readlines()
 
     rows = []
@@ -93,10 +93,10 @@ def create_output(alphabet, initial, final, transitions):
            'initial_state': new_initial,
            'accepting_states': set(new_final),
            'transitions': transitions}
-    automata_IO.dfa_to_dot(dfa, 'graph2.png')
+    automata_IO.dfa_to_dot(dfa, 'graphs/graph2.png')
 
     # Create transition table
-    with open('table3.csv', 'w') as file:
+    with open('tables/table3.csv', 'w') as file:
         file.writelines('𝛿,' + ','.join(alphabet) + '\n')
         for s in states:
             file.writelines(f"{s.replace(', ', '|')}" + ',')
