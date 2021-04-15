@@ -3,7 +3,6 @@ from PySimpleAutomata import automata_IO
 
 def read_nfa():
     """ Reads the transition table given by the user for an nfa """
-
     print('\nWelcome, human. (￣(oo)￣)ﾉ')
     print('Find the empty transition table inside the file called table2.csv.')
     print('Fill it in with the nfa that you want to convert to a dfa.')
@@ -24,10 +23,9 @@ def read_nfa():
     # read the given csv to find the characteristics of the automata
     alphabet = rows[0][1:]
     states = [row[0] for row in rows[1:]]
-    initial = [state.strip('->') for state in states if '->' in state]
-    final = [state.strip('*') for state in states if '*' in state]
+    initial = '{' + [s.strip('->') for s in states if '->' in s][0] + '}'
+    final = [s.strip('*') for s in states if '*' in s]
     rows = [[r.strip('->').strip('*') for r in row] for row in rows]
-
     return rows, alphabet, initial, final
 
 
@@ -45,7 +43,8 @@ def find_new_states(transitions, new_states):
                 for _ in v:
                     if (_, letter) in transitions.keys():
                         r.extend(list(transitions[(_, letter)]))
-                new[(str(v), letter)] = set(r)
+                if r != []:
+                    new[(str(v), letter)] = set(r)
 
     current_states = [k[0] for k in transitions.keys()]
     new_states = [v for v in new.values() if len(v) > 1
@@ -53,7 +52,7 @@ def find_new_states(transitions, new_states):
     return find_new_states(transitions | new, new_states)
 
 
-def convert_nfa(rows):
+def convert_nfa(rows, initial):
     """ Converts the nfa given by the user to a dfa by using the find_new_states
     function """
 
@@ -72,9 +71,10 @@ def convert_nfa(rows):
     dfa_transitions = {('{' + k[0].replace('\'', '') + '}', k[1]) if '{' not in k[0]
                        else (k[0].replace('\'', ''), k[1]): str(v).replace('\'', '')
                        for k, v in possible_transitions.items()}
-    # remove transitions that are not reachable
+    # remove transitions that are not reachable (not arriving or not initial state)
     cleaned_transitions = {k: v for k, v in dfa_transitions.items()
-                           if k[0] in [v for v in dfa_transitions.values()]}
+                           if k[0] in [v for v in dfa_transitions.values()]
+                           or k[0] == initial}
 
     return cleaned_transitions
 
@@ -83,14 +83,13 @@ def create_output(alphabet, initial, final, transitions):
     """ Creates a transition table and diagram for the new dfa """
     # Create transition diagram
     states = set([k[0] for k in transitions.keys()])
-    new_initial = [s for s in states if s if s == '{' + initial[0] + '}'][0]
     new_final = []
     for f in final:
         new_final.extend([s for s in states if f in s])
 
     dfa = {'alphabet': alphabet,
            'states': states,
-           'initial_state': new_initial,
+           'initial_state': initial,
            'accepting_states': set(new_final),
            'transitions': transitions}
     automata_IO.dfa_to_dot(dfa, 'graphs/graph2.png')
@@ -115,5 +114,5 @@ def create_output(alphabet, initial, final, transitions):
 
 if __name__ == '__main__':
     rows, alphabet, initial, final = read_nfa()
-    transitions = convert_nfa(rows)
+    transitions = convert_nfa(rows, initial)
     create_output(alphabet, initial, final, transitions)

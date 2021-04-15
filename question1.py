@@ -3,7 +3,6 @@ from PySimpleAutomata import automata_IO
 
 def get_user_input():
     """ Welcomes user to the program and obtain the necessary inputs """
-
     print('\nWelcome, human. (￣(oo)￣)ﾉ')
     print('Answer these questions to create a pretty transition diagram.')
     print('\n~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *\n')
@@ -48,7 +47,6 @@ def get_user_input():
 
 def read_transitions(type, states):
     """ Reads the transition table filled by the user """
-
     print('Reading transitions...')
     with open('tables/table1.csv', 'r') as file:
         lines = file.readlines()
@@ -85,7 +83,6 @@ def read_transitions(type, states):
 
 def create_graph(type, states, initial, alphabet, final, transitions):
     """ Creates an svg file displaying the transition diagram """
-
     automata = {'alphabet': alphabet,
                 'states': states,
                 'accepting_states': final,
